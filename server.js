@@ -13,16 +13,6 @@ const mongoose = require("mongoose");
 mongoose.connect('mongodb://localhost:27017/favoritebooks', { useNewUrlParser: true, useUnifiedTopology: true });
 
 
-
-const kittySchema = new mongoose.Schema({
-  name: String,
-  breed: String
-});
-
-
-
-
-
 server.get('/test', (req, res) => {
   res.status(200).send('server received request on /test')
 })
