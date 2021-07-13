@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3001;
 const axios = require("axios");
 const mongoose = require("mongoose");
 mongoose.connect("mongodb://localhost:27017/books", { useNewUrlParser: true, useUnifiedTopology: true });
+server.use(express.json());
 
 const BookSchema = new mongoose.Schema({
   bookName: String,
@@ -49,21 +50,69 @@ function seedUserCollection() {
 // seedUserCollection();
 
 // http://localhost:3001/books?email=suhaib.m.ersan@gmail.com
-server.get("/books", getUserData); 
-
-function getUserData(req, res){
+server.get("/books", getUserData);
+function getUserData(req, res) {
   let email = req.query.email;
 
   myUserModel.find({ email: email }, function (error, userData) {
     if (error) {
       res.send("did not work");
     } else {
-      console.log('userData here vvvvvvvvvvvvvvvvvvvvvvvvv');
+      console.log("userData here vvvvvvvvvvvvvvvvvvvvvvvvv");
       console.log(userData);
       res.send(userData[0].books);
     }
   });
-};
+}
+
+// http://localhost:3001/addbook?{object}
+server.post("/addbook", addBookHandler);
+function addBookHandler(req, res) {
+  let { email, bookName, publishYear, description, author, coverUrl } = req.body;
+
+  myUserModel.find({ email: email }, function (error, userData) {
+    if (error) {
+      res.send("did not work");
+    } else {
+      console.log("userData here vvvvvvvvvvvvvvvvvvvvvvvvv");
+      console.log("before adding", userData);
+
+      userData[0].books.push({
+        bookName,
+        year: publishYear,
+        description,
+        author,
+        cover: coverUrl,
+      });
+      console.log("after adding", userData[0]);
+      userData[0].save();
+      res.send(userData[0].books);
+    }
+  });
+}
+
+server.delete("/deletebook/:indexid", deleteBookHandler);
+function deleteBookHandler(req, res) {
+  console.log(req.params);
+  console.log(req.query);
+  let index = Number(req.params.indexid);
+  console.log({ index });
+  let email = req.query.email;
+  myUserModel.find({ email: email }, (error, userData) => {
+    if (error) {
+      res.send("cant find user");
+    } else {
+      let newBooksArr = userData[0].books.filter((book, idx) => {
+        if (idx !== index) {
+          return book;
+        }
+      });
+      userData[0].books = newBooksArr;
+      userData[0].save();
+      res.send(userData[0].books);
+    }
+  });
+}
 
 server.get("/test", (req, res) => {
   res.status(200).send("server received request on /test");
